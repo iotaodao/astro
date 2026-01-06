@@ -1,0 +1,49 @@
+---
+import { Instagram, Send } from 'lucide-react';
+---
+
+<footer class="bg-[#1a4031] text-white/80 py-20">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+      {/* Column 1: Brand */}
+      <div>
+        <a href="/" class="text-4xl font-serif font-bold text-white mb-4 block tracking-tight">Yard.</a>
+        <p class="max-w-xs text-white/60 leading-relaxed">
+          Искусство создавать сады, которые вдохновляют и дарят спокойствие в любое время года.
+        </p>
+      </div>
+
+      {/* Column 2: Contacts */}
+      <div>
+        <h3 class="text-white font-serif text-xl mb-6">Контакты</h3>
+        <div class="space-y-4">
+          <a href="tel:+79990000000" class="block hover:text-white transition-colors">+7 (999) 000-00-00</a>
+          <a href="mailto:hello@yard-studio.com" class="block hover:text-white transition-colors">hello@yard-studio.com</a>
+          <p class="text-white/60">г. Москва, ул. Садовая, д. 1</p>
+        </div>
+      </div>
+
+      {/* Column 3: Socials */}
+      <div>
+        <h3 class="text-white font-serif text-xl mb-6">Мы в соцсетях</h3>
+        <div class="flex gap-4">
+          <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#1a4031] transition-all duration-300 group">
+            <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </a>
+          <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-[#1a4031] transition-all duration-300 group">
+            <Send className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {/* Bottom */}
+    <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/40">
+      <p>&copy; {new Date().getFullYear()} Yard Landscape Design Studio. All rights reserved.</p>
+      <div class="flex gap-8">
+        <a href="#" class="hover:text-white transition-colors">Политика конфиденциальности</a>
+        <a href="#" class="hover:text-white transition-colors">Договор оферты</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SeasonalServices from '../components/services/SeasonalServices';
+import Footer from '../components/Footer.astro';
+import { getServices } from '../lib/wp';
+
+const services = await getServices();
+---
+
+<Layout title="Услуги | Yard.">
+  <div class="pt-32 pb-20 container mx-auto px-4 min-h-screen">
+    <h1 class="text-5xl font-serif text-primary mb-12 text-center">Наши Услуги</h1>
+    <SeasonalServices client:load services={services} />
+  </div>
+  <Footer />
+</Layout>
