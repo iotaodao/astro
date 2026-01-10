@@ -1,18 +1,148 @@
 ---
+import { Phone, Send, Menu, X } from 'lucide-react';
+
+const phoneDisplay = '+7 (999) 123-45-67';
+const phoneLink = 'tel:+79991234567';
+const telegramLink = 'https://t.me/ваш_ник'; 
+
+const navLinks = [
+  { href: '/services', label: 'Услуги' },
+  { href: '/projects', label: 'Проекты' },
+  { href: '/pricing', label: 'Цены' },
+  { href: '/contact', label: 'Контакты' },
+];
 ---
 
-<nav class="fixed top-6 left-0 right-0 z-50 px-4 flex justify-center">
-  <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between shadow-glow w-full max-w-5xl">
-    <a href="/" class="text-2xl font-serif font-bold text-primary tracking-tight">Yard.</a>
+<header class="fixed top-6 left-0 right-0 z-50 px-4" id="main-header">
+  <div class="container mx-auto max-w-6xl relative">
     
-    <div class="hidden md:flex items-center gap-8">
-      <a href="/services" class="text-primary/80 hover:text-primary transition-colors font-medium">Услуги</a>
-      <a href="/projects" class="text-primary/80 hover:text-primary transition-colors font-medium">Проекты</a>
-      <a href="/pricing" class="text-primary/80 hover:text-primary transition-colors font-medium">Цены</a>
+    {/* ПАНЕЛЬ */}
+    <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between shadow-glow relative z-20 bg-white/80 backdrop-blur-xl border border-white/40 transition-all duration-300" id="header-panel">
+      
+      {/* Логотип */}
+      <a href="/" class="text-2xl font-serif font-bold text-primary tracking-tight shrink-0">
+        PlantUP
+      </a>
+
+      {/* Меню (Десктоп) */}
+      <nav class="hidden md:flex items-center gap-8">
+        {navLinks.map(link => (
+          <a href={link.href} class="text-primary/80 hover:text-primary transition-colors font-medium text-sm uppercase tracking-wider">
+            {link.label}
+          </a>
+        ))}
+      </nav>
+
+      {/* Контакты (Десктоп) */}
+      <div class="hidden md:flex items-center gap-4 shrink-0">
+        <a href={phoneLink} class="flex items-center gap-2 text-primary font-medium hover:text-accent transition-colors">
+          <Phone className="w-5 h-5" />
+          <span>{phoneDisplay}</span>
+        </a>
+        <a href={telegramLink} target="_blank" rel="noopener noreferrer" class="bg-primary text-white p-2 rounded-full hover:bg-accent transition-colors flex items-center justify-center">
+           <Send className="w-5 h-5 -ml-0.5 mt-0.5" />
+        </a>
+      </div>
+
+      {/* Кнопка мобильного меню */}
+      <button id="mobile-menu-toggle" class="md:hidden text-primary p-1" aria-label="Меню">
+        <Menu className="w-7 h-7" id="icon-menu" />
+        <X className="w-7 h-7 hidden" id="icon-close" />
+      </button>
+
     </div>
 
-    <a href="/contact" class="bg-primary text-white px-6 py-2.5 rounded-full font-medium hover:bg-primary/90 transition-colors">
-      Связаться
-    </a>
+    {/* Мобильное меню */}
+    <div id="mobile-menu" class="absolute top-full left-0 right-0 mt-2 hidden md:hidden origin-top transition-all duration-300 z-10">
+       <div class="glass-panel rounded-3xl p-6 flex flex-col gap-6 shadow-xl bg-white/90 backdrop-blur-xl border border-white/40">
+         <nav class="flex flex-col gap-4 text-center">
+          {navLinks.map(link => (
+            <a href={link.href} class="text-primary text-lg font-medium py-2 border-b border-primary/10 last:border-0 mobile-link">
+              {link.label}
+            </a>
+          ))}
+         </nav>
+         
+         <div class="flex flex-col items-center gap-4 pt-4 border-t border-primary/20">
+            <a href={phoneLink} class="flex items-center gap-2 text-primary font-bold text-lg">
+              <Phone className="w-6 h-6" />
+              <span>{phoneDisplay}</span>
+            </a>
+            <a href={telegramLink} class="bg-primary text-white px-6 py-3 rounded-full hover:bg-accent transition-colors flex items-center justify-center gap-2 w-full max-w-xs font-medium">
+               <Send className="w-5 h-5" />
+               <span>Написать в Telegram</span>
+            </a>
+         </div>
+       </div>
+    </div>
+
   </div>
-</nav>
+</header>
+
+<script is:inline>
+  // Используем is:inline, чтобы Astro не обрабатывал скрипт как модуль и не ломал синтаксис
+  (function() {
+    var toggleBtn = document.getElementById('mobile-menu-toggle');
+    var menu = document.getElementById('mobile-menu');
+    var iconMenu = document.getElementById('icon-menu');
+    var iconClose = document.getElementById('icon-close');
+    var headerPanel = document.getElementById('header-panel');
+    var mobileLinks = document.querySelectorAll('.mobile-link');
+    var isOpen = false;
+
+    function setMenuState(open) {
+      isOpen = open;
+      if (menu) {
+        if (open) menu.classList.remove('hidden');
+        else menu.classList.add('hidden');
+      }
+      
+      if (iconMenu) {
+        if (open) iconMenu.classList.add('hidden');
+        else iconMenu.classList.remove('hidden');
+      }
+      
+      if (iconClose) {
+        if (open) iconClose.classList.remove('hidden');
+        else iconClose.classList.add('hidden');
+      }
+
+      if (headerPanel) {
+        if (open) {
+          headerPanel.classList.remove('rounded-full');
+          headerPanel.classList.add('rounded-t-3xl');
+          headerPanel.classList.add('rounded-b-lg');
+        } else {
+          headerPanel.classList.add('rounded-full');
+          headerPanel.classList.remove('rounded-t-3xl');
+          headerPanel.classList.remove('rounded-b-lg');
+        }
+      }
+    }
+
+    function toggleMenu() {
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', toggleMenu);
+    }
+
+    // Закрытие при клике на ссылку
+    for (var i = 0; i < mobileLinks.length; i++) {
+      mobileLinks[i].addEventListener('click', function() {
+        setMenuState(false);
+      });
+    }
+
+    // Закрытие при клике вне меню
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      
+      var clickInsideMenu = menu && menu.contains(target);
+      var clickOnToggle = toggleBtn && toggleBtn.contains(target);
+
+        setMenuState(false);
+      }
+    });
+  })();
+</script>
