@@ -7,12 +7,14 @@ import { getPricingPlans } from '../../lib/wp';
 
 const { service } = Astro.props;
 
-// Получаем тарифы
+// Получаем тарифы (можно добавить фильтрацию по услуге, если нужно)
 const pricingPlans = await getPricingPlans();
 ---
 
+{/* ОБЯЗАТЕЛЬНО: Оборачиваем все в Layout, чтобы появились теги <html> и <head> */}
 <Layout title={service.title}>
   <div class="min-h-screen bg-stone-50 font-sans">
+    
     <Header />
 
     <main>
