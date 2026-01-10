@@ -1,0 +1,36 @@
+---
+// src/layouts/DotcmsPage.astro
+import '../styles/global.css';
+// Импортируем именно тот компонент, который мы нашли в логах
+import { DotCMSLayoutBody } from '@dotcms/react';
+
+const { pageRender, componentsMap } = Astro.props;
+
+// Защита: проверяем, пришли ли данные
+if (!pageRender || !pageRender.layout) {
+    console.error("DotcmsPage Error: pageRender or layout is missing", pageRender);
+}
+---
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{pageRender?.page?.title || 'Page'}</title>
+    
+    {/* Скрипт для режима редактирования (Edit Mode) */}
+    {import.meta.env.DEV || (pageRender?.page?.locked) ? (
+        <script is:inline src={`${import.meta.env.PUBLIC_DOTCMS_HOST}/dotcms-uve/uve.js`} type="module"></script>
+    ) : null}
+  </head>
+  <body>
+    {/* DotcmsLayout (старый) -> DotCMSLayoutBody (новый).
+      Он отрисовывает сетку страницы (Layout).
+      Передаем ему весь контекст страницы.
+    */}
+    <DotCMSLayoutBody 
+        pageContext={pageRender} 
+        components={componentsMap} 
+    />
+  </body>
+</html>

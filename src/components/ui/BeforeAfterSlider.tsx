@@ -11,6 +11,10 @@ interface BeforeAfterSliderProps {
 export default function BeforeAfterSlider({ beforeImage, afterImage, alt }: BeforeAfterSliderProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState(50);
+  
+  // 1. ДОБАВЛЕНО: Объявление переменной состояния
+  const [hasInteracted, setHasInteracted] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMove = useCallback((clientX: number) => {
@@ -19,7 +23,12 @@ export default function BeforeAfterSlider({ beforeImage, afterImage, alt }: Befo
     const x = clientX - left;
     const newPos = Math.max(0, Math.min(100, (x / width) * 100));
     setPosition(newPos);
-  }, []);
+    
+    // 2. ДОБАВЛЕНО: Фиксация того, что пользователь трогал слайдер
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+  }, [hasInteracted]); // Добавили зависимость
 
   const handleMouseDown = () => setIsResizing(true);
   const handleTouchStart = () => setIsResizing(true);
@@ -95,6 +104,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage, alt }: Befo
       </div>
 
       {/* Drag Hint */}
+      {/* Теперь эта переменная существует и ошибки не будет */}
       {!hasInteracted && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-12 z-20 pointer-events-none transition-opacity duration-500 opacity-70 bg-black/50 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm">
           Потяните слайдер

@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
@@ -12,10 +12,7 @@ export default {
         serif: ['Fraunces', 'serif'],
         sans: ['Manrope', 'sans-serif'],
       },
-      borderRadius: {
-        '3xl': '1.5rem',
-      },
     },
   },
   plugins: [],
-};
+}

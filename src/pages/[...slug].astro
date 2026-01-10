@@ -1,0 +1,65 @@
+---
+// src/pages/[...slug].astro
+
+// 1. ПОДКЛЮЧЕНИЕ СТИЛЕЙ (ЭТОГО НЕ ХВАТАЛО)
+import '../styles/global.css';
+
+// 2. Импорты API
+import { getPage } from '../lib/dotcms';
+import { getServiceBySlug } from '../lib/wp';
+
+// 3. Импорты шаблонов
+import DotcmsPage from '../layouts/DotcmsPage.astro';
+import ServicePage from '../components/templates/ServicePage.astro';
+import HomePage from '../components/templates/HomePage.astro';
+
+// Получаем текущий URL
+const { slug } = Astro.params;
+const currentSlug = slug || '/'; 
+
+// Определяем, главная ли это страница
+const isHomePage = currentSlug === '/' || currentSlug === 'index';
+
+// --- ЛОГИКА РОУТИНГА ---
+
+let pageData = null;
+let templateType = 'dotcms';
+let wpData = null;
+
+// ПОПЫТКА 1: Запрашиваем страницу в DotCMS
+try {
+  const fetchSlug = isHomePage ? 'index' : currentSlug;
+  pageData = await getPage(fetchSlug);
+} catch (e) {
+  // Игнорируем ошибку, идем дальше
+}
+
+// ЛОГИКА ВЫБОРА ШАБЛОНА
+if (isHomePage && pageData) {
+    templateType = 'home';
+}
+else if (!pageData) {
+  // Проверяем WordPress
+  const cleanSlug = currentSlug.replace(/^services\//, '').replace(/\/$/, '');
+  const service = await getServiceBySlug(cleanSlug);
+  
+  if (service) {
+    templateType = 'service';
+    wpData = service;
+  } else {
+    return Astro.redirect('/404'); 
+  }
+}
+---
+
+{/* --- РЕНДЕРИНГ --- */}
+
+{
+  templateType === 'home' ? (
+    <HomePage pageContext={pageData} />
+  ) : templateType === 'service' ? (
+    <ServicePage service={wpData} />
+  ) : (
+    <DotcmsPage pageRender={pageData} componentsMap={{}} />
+  )
+}

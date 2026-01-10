@@ -1,24 +1,54 @@
 // src/lib/wp.ts
-const WP_API_URL = import.meta.env.PUBLIC_WP_API_URL;
+
+const getEnv = (key: string) => {
+  // @ts-ignore
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
+    // @ts-ignore
+    return process.env[key];
+  }
+  if (import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  return '';
+};
+
+const WP_API_URL = getEnv('INTERNAL_WP_API_URL') || getEnv('PUBLIC_WP_API_URL');
 
 async function fetchAPI(query: string, { variables }: { variables?: any } = { variables: {} }) {
   const headers = { 'Content-Type': 'application/json' };
+  
+  if (!WP_API_URL) return null;
+
   try {
     const res = await fetch(WP_API_URL, {
       method: 'POST',
       headers,
       body: JSON.stringify({ query, variables }),
     });
+
     const json = await res.json();
     if (json.errors) {
-      console.error('WP GraphQL Errors:', json.errors);
-      throw new Error('Failed to fetch WP API');
+      console.error('[WP GraphQL Error]', json.errors[0].message);
+      return null;
     }
     return json.data;
   } catch (error) {
-    console.error(error);
+    console.error(`[WP Fetch Error] Failed to connect to WP`);
     return null;
   }
+}
+
+function processServiceNode(node: any) {
+  if (!node) return null;
+  return {
+    title: node.title,
+    slug: node.slug,
+    content: node.content, 
+    image: node.featuredImage?.node?.sourceUrl || '/images/hero-poster.jpg',
+    icon: node.acfService?.iconUrl || '',
+    description: node.acfService?.shortDescription || '',
+    link: `/services/${node.slug}`
+  };
 }
 
 export async function getServices() {
@@ -28,11 +58,9 @@ export async function getServices() {
         nodes {
           title
           slug
-          seasons {
-            nodes {
-              slug
-              name
-            }
+          content(format: RENDERED)
+          featuredImage {
+            node { sourceUrl }
           }
           acfService {
             iconUrl
@@ -42,17 +70,33 @@ export async function getServices() {
       }
     }
   `);
-  
-  return data?.services?.nodes.map((node: any) => ({
-    title: node.title,
-    icon: node.acfService.iconUrl, // Expecting a URL string or icon name in Free version
-    description: node.acfService.shortDescription,
-    seasons: node.seasons?.nodes ? node.seasons.nodes.map((s: any) => s.slug) : [],
-    link: `/services/${node.slug}`
-  })) || [];
+  return data?.services?.nodes.map(processServiceNode) || [];
+}
+
+export async function getServiceBySlug(slug: string) {
+  const data = await fetchAPI(`
+    query GetServiceBySlug($id: ID!) {
+      service(id: $id, idType: SLUG) {
+        title
+        slug
+        content(format: RENDERED)
+        featuredImage {
+          node { sourceUrl }
+        }
+        acfService {
+          iconUrl
+          shortDescription
+        }
+      }
+    }
+  `, { variables: { id: slug } });
+
+  if (!data?.service) return null;
+  return processServiceNode(data.service);
 }
 
 export async function getPortfolioItems() {
+  // ВАЖНО: Тут мы добавили .node перед sourceUrl, чтобы убрать ошибку
   const data = await fetchAPI(`
     query GetPortfolio {
       projects(first: 5, where: { orderby: { field: DATE, order: DESC } }) {
@@ -62,21 +106,28 @@ export async function getPortfolioItems() {
             location
             area
             duration
-            beforeImage { sourceUrl }
-            afterImage { sourceUrl }
+            beforeImage {
+              node { sourceUrl }
+            }
+            afterImage {
+              node { sourceUrl }
+            }
           }
         }
       }
     }
   `);
   
-  return data?.projects?.nodes.map((node: any) => ({
+  if (!data) return [];
+
+  return data.projects?.nodes.map((node: any) => ({
     title: node.title,
-    location: node.acfProject.location,
-    area: node.acfProject.area,
-    duration: node.acfProject.duration,
-    before: node.acfProject.beforeImage?.sourceUrl,
-    after: node.acfProject.afterImage?.sourceUrl,
+    location: node.acfProject?.location || '',
+    area: node.acfProject?.area || '',
+    duration: node.acfProject?.duration || '',
+    // ВАЖНО: Тут тоже добавили .node
+    before: node.acfProject?.beforeImage?.node?.sourceUrl || '',
+    after: node.acfProject?.afterImage?.node?.sourceUrl || '',
     alt: `Project: ${node.title}`
   })) || [];
 }
@@ -99,14 +150,15 @@ export async function getPricingPlans() {
     }
   `);
   
-  return data?.pricingPlans?.nodes.map((node: any) => ({
+  if (!data) return [];
+
+  return data.pricingPlans?.nodes.map((node: any) => ({
     name: node.title,
-    price: node.acfPricing.price,
-    type: node.acfPricing.type,
-    description: node.acfPricing.description,
-    isPopular: node.acfPricing.isPopular,
-    // Parsing logic for ACF Free (Text Area split by newline)
-    features: node.acfPricing.featuresRaw
+    price: node.acfPricing?.price || '',
+    type: node.acfPricing?.type || '',
+    description: node.acfPricing?.description || '',
+    isPopular: node.acfPricing?.isPopular || false,
+    features: node.acfPricing?.featuresRaw
       ? node.acfPricing.featuresRaw.split('\n').map((line: string) => {
           const text = line.trim();
           const isExcluded = text.startsWith('-');

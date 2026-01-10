@@ -1,63 +1,93 @@
+// src/components/hero/HeroContent.tsx
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { Mouse } from 'lucide-react';
 
 export default function HeroContent() {
-  const container = {
+  const containerVariants = {
     hidden: { opacity: 0 },
-    show: {
+    visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.2,
+        delayChildren: 0.3,
+      },
+    },
   };
 
-  const item = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+      },
+    },
   };
 
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="max-w-4xl mx-auto text-center text-white relative z-10 px-4"
-    >
-      <motion.h1 
-        variants={item}
-        className="text-5xl md:text-7xl lg:text-8xl font-serif font-light leading-tight mb-6"
+    <div className="h-full flex flex-col justify-center items-center text-center px-4">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-4xl mx-auto flex flex-col items-center"
       >
-        Искусство <br />
-        <span className="italic">создавать сады</span>
-      </motion.h1>
-      
-      <motion.p 
-        variants={item}
-        className="text-lg md:text-xl font-sans font-light text-white/90 max-w-2xl mx-auto mb-10"
-      >
-        Мы проектируем пространства, где природа встречается с архитектурой, создавая гармонию для вашей жизни.
-      </motion.p>
-      
-      <motion.div 
-        variants={item}
-        className="flex flex-col sm:flex-row items-center justify-center gap-4"
-      >
-        <a 
-          href="/projects" 
-          className="bg-white text-primary px-8 py-4 rounded-full font-medium hover:bg-stone-100 transition-colors w-full sm:w-auto flex items-center justify-center gap-2 group"
+        {/* Badge (Переведенный текст) */}
+        <motion.div variants={itemVariants} className="mb-6">
+          <span className="inline-block px-4 py-2 rounded-full text-sm font-medium text-white/90 uppercase tracking-wider backdrop-blur-md bg-white/10 border border-white/20">
+            Профессиональный уход за садом
+          </span>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h1
+          variants={itemVariants}
+          className="font-serif text-5xl md:text-7xl text-white font-bold mb-6 leading-tight"
         >
-          Смотреть проекты
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </a>
-        <a 
-          href="/contact" 
-          className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-medium hover:bg-white/20 transition-colors w-full sm:w-auto"
+          Искусство живого сада
+        </motion.h1>
+
+        {/* Subtitle */}
+        <motion.p
+          variants={itemVariants}
+          className="font-sans text-lg md:text-xl text-white/90 mb-10 max-w-2xl leading-relaxed"
         >
-          Обсудить идею
-        </a>
+          Комплексный уход, лечение деревьев и эстетическая стрижка.
+        </motion.p>
+
+        {/* CTA Button */}
+        <motion.a
+          href="/contact"
+          variants={itemVariants}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/30 text-white font-medium text-lg transition-colors hover:bg-white/20"
+        >
+          Обсудить проект
+        </motion.a>
       </motion.div>
-    </motion.div>
+
+      {/* Scroll Indicator (Без текста, только иконка) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5, duration: 1 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/70 flex flex-col items-center gap-2"
+      >
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <Mouse size={24} />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

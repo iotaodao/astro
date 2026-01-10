@@ -1,0 +1,30 @@
+---
+// src/components/hero/CinematicHero.astro
+import HeroContent from './HeroContent';
+---
+
+<section class="relative h-screen w-full overflow-hidden flex items-center justify-center bg-[#1a4031]">
+  
+  {/* Видео слой */}
+  <video
+    autoplay
+    loop
+    muted
+    playsinline
+    {/* ИСПРАВЛЕННЫЙ ПУТЬ К ПОСТЕРУ: */}
+    poster="/images/hero-poster.jpg"
+    class="absolute top-0 left-0 w-full h-full object-cover z-0"
+  >
+    {/* Пути к видео остаются прежними (в папке video) */}
+    <source src="/video/hero.webm" type="video/webm" />
+    <source src="/video/hero.mp4" type="video/mp4" />
+  </video>
+
+  {/* Затемнение (Градиент) */}
+  <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 z-10 pointer-events-none"></div>
+
+  {/* Контент */}
+  <div class="relative z-20 w-full h-full">
+    <HeroContent client:load />
+  </div>
+</section>
