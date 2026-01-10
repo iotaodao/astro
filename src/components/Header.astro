@@ -45,7 +45,7 @@ const navLinks = [
       </div>
 
       {/* Кнопка мобильного меню */}
-      <button id="mobile-menu-toggle" class="md:hidden text-primary p-1" aria-label="Меню">
+      <button id="mobile-menu-toggle" class="md:hidden text-primary p-1 active:scale-95 transition-transform" aria-label="Меню">
         <Menu className="w-7 h-7" id="icon-menu" />
         <X className="w-7 h-7 hidden" id="icon-close" />
       </button>
@@ -80,69 +80,77 @@ const navLinks = [
 </header>
 
 <script is:inline>
-  // Используем is:inline, чтобы Astro не обрабатывал скрипт как модуль и не ломал синтаксис
-  (function() {
+  // Функция инициализации меню
+  function initMenu() {
     var toggleBtn = document.getElementById('mobile-menu-toggle');
     var menu = document.getElementById('mobile-menu');
     var iconMenu = document.getElementById('icon-menu');
     var iconClose = document.getElementById('icon-close');
     var headerPanel = document.getElementById('header-panel');
     var mobileLinks = document.querySelectorAll('.mobile-link');
+    
+    // Сбрасываем состояние при каждой загрузке страницы
     var isOpen = false;
 
-    function setMenuState(open) {
-      isOpen = open;
+    // Функция переключения
+    function toggleMenu() {
+      
+      // Показываем/скрываем само меню
       if (menu) {
-        if (open) menu.classList.remove('hidden');
+        if (isOpen) menu.classList.remove('hidden');
         else menu.classList.add('hidden');
       }
       
+      // Переключаем иконки
       if (iconMenu) {
-        if (open) iconMenu.classList.add('hidden');
+        if (isOpen) iconMenu.classList.add('hidden');
         else iconMenu.classList.remove('hidden');
       }
       
       if (iconClose) {
-        if (open) iconClose.classList.remove('hidden');
+        if (isOpen) iconClose.classList.remove('hidden');
         else iconClose.classList.add('hidden');
       }
 
+      // Меняем форму панели
       if (headerPanel) {
-        if (open) {
+        if (isOpen) {
           headerPanel.classList.remove('rounded-full');
-          headerPanel.classList.add('rounded-t-3xl');
-          headerPanel.classList.add('rounded-b-lg');
+          headerPanel.classList.add('rounded-t-3xl', 'rounded-b-lg');
         } else {
           headerPanel.classList.add('rounded-full');
-          headerPanel.classList.remove('rounded-t-3xl');
-          headerPanel.classList.remove('rounded-b-lg');
+          headerPanel.classList.remove('rounded-t-3xl', 'rounded-b-lg');
         }
       }
     }
 
-    function toggleMenu() {
-    }
-
+    // Удаляем старые слушатели (клон элемента - самый быстрый способ очистить ивенты)
     if (toggleBtn) {
-      toggleBtn.addEventListener('click', toggleMenu);
+        var newBtn = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+        newBtn.addEventListener('click', toggleMenu);
     }
 
-    // Закрытие при клике на ссылку
-    for (var i = 0; i < mobileLinks.length; i++) {
-      mobileLinks[i].addEventListener('click', function() {
-        setMenuState(false);
+    // Обработка кликов по ссылкам
+    mobileLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (isOpen) toggleMenu();
       });
-    }
+    });
 
-    // Закрытие при клике вне меню
+    // Обработка клика вне меню
     document.addEventListener('click', function(e) {
       var target = e.target;
+      var currentBtn = document.getElementById('mobile-menu-toggle'); // Получаем свежий элемент
       
       var clickInsideMenu = menu && menu.contains(target);
-      var clickOnToggle = toggleBtn && toggleBtn.contains(target);
+      var clickOnToggle = currentBtn && currentBtn.contains(target);
 
-        setMenuState(false);
+        toggleMenu();
       }
     });
-  })();
+  }
+
+  // Запускаем при каждой навигации (совместимость с Astro ViewTransitions)
+  document.addEventListener('astro:page-load', initMenu);
 </script>
