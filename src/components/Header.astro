@@ -13,13 +13,12 @@ const navLinks = [
 ];
 ---
 
-<header class="fixed top-6 left-0 right-0 z-50 px-4" id="main-header">
+<header class="fixed top-6 left-0 right-0 z-[100] px-4" id="main-header">
   <div class="container mx-auto max-w-6xl relative">
     
-    {/* ПАНЕЛЬ */}
-    <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between shadow-glow relative z-20 bg-white/80 backdrop-blur-xl border border-white/40 transition-all duration-300" id="header-panel">
+    {/* Панель шапки */}
+    <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between shadow-glow relative z-[101] bg-white/80 backdrop-blur-xl border border-white/40 transition-all duration-300" id="header-panel">
       
-      {/* Логотип */}
       <a href="/" class="text-2xl font-serif font-bold text-primary tracking-tight shrink-0">
         PlantUP
       </a>
@@ -39,25 +38,26 @@ const navLinks = [
           <Phone className="w-5 h-5" />
           <span>{phoneDisplay}</span>
         </a>
-        <a href={telegramLink} target="_blank" rel="noopener noreferrer" class="bg-primary text-white p-2 rounded-full hover:bg-accent transition-colors flex items-center justify-center">
-           <Send className="w-5 h-5 -ml-0.5 mt-0.5" />
-        </a>
       </div>
 
-      {/* Кнопка мобильного меню */}
-      <button id="mobile-menu-toggle" class="md:hidden text-primary p-1 active:scale-95 transition-transform" aria-label="Меню">
-        <Menu className="w-7 h-7" id="icon-menu" />
-        <X className="w-7 h-7 hidden" id="icon-close" />
+      {/* КНОПКА МОБИЛЬНОГО МЕНЮ */}
+      <button id="mobile-menu-toggle" class="md:hidden text-primary p-2 -mr-2 cursor-pointer z-[102] relative active:scale-95 transition-transform" aria-label="Меню">
+        <div id="icon-menu">
+            <Menu className="w-8 h-8" />
+        </div>
+        <div id="icon-close" class="hidden">
+            <X className="w-8 h-8" />
+        </div>
       </button>
 
     </div>
 
-    {/* Мобильное меню */}
-    <div id="mobile-menu" class="absolute top-full left-0 right-0 mt-2 hidden md:hidden origin-top transition-all duration-300 z-10">
-       <div class="glass-panel rounded-3xl p-6 flex flex-col gap-6 shadow-xl bg-white/90 backdrop-blur-xl border border-white/40">
+    {/* Выпадающее меню */}
+    <div id="mobile-menu" class="absolute top-full left-0 right-0 mt-2 hidden md:hidden origin-top transition-all duration-300 z-[100]">
+       <div class="glass-panel rounded-3xl p-6 flex flex-col gap-6 shadow-xl bg-white/95 backdrop-blur-xl border border-white/40">
          <nav class="flex flex-col gap-4 text-center">
           {navLinks.map(link => (
-            <a href={link.href} class="text-primary text-lg font-medium py-2 border-b border-primary/10 last:border-0 mobile-link">
+            <a href={link.href} class="text-primary text-xl font-medium py-3 border-b border-primary/10 last:border-0 mobile-link">
               {link.label}
             </a>
           ))}
@@ -68,8 +68,8 @@ const navLinks = [
               <Phone className="w-6 h-6" />
               <span>{phoneDisplay}</span>
             </a>
-            <a href={telegramLink} class="bg-primary text-white px-6 py-3 rounded-full hover:bg-accent transition-colors flex items-center justify-center gap-2 w-full max-w-xs font-medium">
-               <Send className="w-5 h-5" />
+            <a href={telegramLink} class="bg-primary text-white px-6 py-4 rounded-full hover:bg-accent transition-colors flex items-center justify-center gap-2 w-full max-w-xs font-medium text-lg">
+               <Send className="w-6 h-6" />
                <span>Написать в Telegram</span>
             </a>
          </div>
@@ -80,77 +80,64 @@ const navLinks = [
 </header>
 
 <script is:inline>
-  // Функция инициализации меню
-  function initMenu() {
-    var toggleBtn = document.getElementById('mobile-menu-toggle');
+  // Используем событие astro:page-load для поддержки переходов
+  document.addEventListener('astro:page-load', function() {
+    var btn = document.getElementById('mobile-menu-toggle');
     var menu = document.getElementById('mobile-menu');
+    var headerPanel = document.getElementById('header-panel');
     var iconMenu = document.getElementById('icon-menu');
     var iconClose = document.getElementById('icon-close');
-    var headerPanel = document.getElementById('header-panel');
-    var mobileLinks = document.querySelectorAll('.mobile-link');
-    
-    // Сбрасываем состояние при каждой загрузке страницы
-    var isOpen = false;
+
+    if (!btn || !menu) return;
+
+    // Клонируем кнопку, чтобы удалить старые сломанные обработчики
+    var newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
 
     // Функция переключения
     function toggleMenu() {
-      
-      // Показываем/скрываем само меню
-      if (menu) {
-        if (isOpen) menu.classList.remove('hidden');
-        else menu.classList.add('hidden');
-      }
-      
-      // Переключаем иконки
-      if (iconMenu) {
-        if (isOpen) iconMenu.classList.add('hidden');
-        else iconMenu.classList.remove('hidden');
-      }
-      
-      if (iconClose) {
-        if (isOpen) iconClose.classList.remove('hidden');
-        else iconClose.classList.add('hidden');
-      }
-
-      // Меняем форму панели
-      if (headerPanel) {
-        if (isOpen) {
-          headerPanel.classList.remove('rounded-full');
-          headerPanel.classList.add('rounded-t-3xl', 'rounded-b-lg');
-        } else {
-          headerPanel.classList.add('rounded-full');
-          headerPanel.classList.remove('rounded-t-3xl', 'rounded-b-lg');
+      var isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        // Открыть
+        menu.classList.remove('hidden');
+        if (iconMenu) iconMenu.classList.add('hidden');
+        if (iconClose) iconClose.classList.remove('hidden');
+        if (headerPanel) {
+           headerPanel.classList.remove('rounded-full');
+           headerPanel.classList.add('rounded-t-3xl', 'rounded-b-lg');
+        }
+      } else {
+        // Закрыть
+        menu.classList.add('hidden');
+        if (iconMenu) iconMenu.classList.remove('hidden');
+        if (iconClose) iconClose.classList.add('hidden');
+        if (headerPanel) {
+           headerPanel.classList.add('rounded-full');
+           headerPanel.classList.remove('rounded-t-3xl', 'rounded-b-lg');
         }
       }
     }
 
-    // Удаляем старые слушатели (клон элемента - самый быстрый способ очистить ивенты)
-    if (toggleBtn) {
-        var newBtn = toggleBtn.cloneNode(true);
-        toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
-        newBtn.addEventListener('click', toggleMenu);
-    }
-
-    // Обработка кликов по ссылкам
-    mobileLinks.forEach(function(link) {
-      link.addEventListener('click', function() {
-        if (isOpen) toggleMenu();
-      });
+    // Клик по кнопке
+    newBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleMenu();
     });
 
-    // Обработка клика вне меню
+    // Клик вне меню (закрытие)
     document.addEventListener('click', function(e) {
-      var target = e.target;
-      var currentBtn = document.getElementById('mobile-menu-toggle'); // Получаем свежий элемент
+      if (menu.classList.contains('hidden')) return;
       
-      var clickInsideMenu = menu && menu.contains(target);
-      var clickOnToggle = currentBtn && currentBtn.contains(target);
-
-        toggleMenu();
+      var isClickInside = menu.contains(e.target) || newBtn.contains(e.target);
+      if (!isClickInside) {
+        menu.classList.add('hidden');
+        if (iconMenu) iconMenu.classList.remove('hidden');
+        if (iconClose) iconClose.classList.add('hidden');
+        if (headerPanel) {
+           headerPanel.classList.add('rounded-full');
+           headerPanel.classList.remove('rounded-t-3xl', 'rounded-b-lg');
+        }
       }
     });
-  }
-
-  // Запускаем при каждой навигации (совместимость с Astro ViewTransitions)
-  document.addEventListener('astro:page-load', initMenu);
+  });
 </script>
