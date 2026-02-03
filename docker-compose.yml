@@ -1,0 +1,156 @@
+services:
+  # --- 1. WordPress & MySQL ---
+  db:
+    image: mysql:8.0
+    container_name: wordpress_db
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --innodb-buffer-pool-size=512M # Оптимизировано для экономии памяти
+      - --max-connections=150
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wp-network
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_app
+    restart: unless-stopped
+    depends_on:
+      - db
+    # ports: В Dokploy порты наружу не нужны, используйте вкладку "Domains" (порт 80)
+    #   - "127.0.0.1:7880:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+    volumes:
+      - wp_data:/var/www/html
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - wp-network
+
+  # --- 2. Инструменты БД (Adminer) ---
+  adminer:
+    image: adminer
+    container_name: adminer_tool
+    restart: always
+    environment:
+      ADMINER_DESIGN: pepa-lined
+    # В Dokploy добавьте домен (например db.plantup.ru) с портом 8080 для этого сервиса
+    networks:
+      - wp-network
+
+  # phpmyadmin: (Закомментирован в пользу Adminer)
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: wordpress_pma
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     PMA_HOST: db
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  #     UPLOAD_LIMIT: 512M
+  #   networks:
+  #     - wp-network
+
+  # --- 3. dotCMS (PostgreSQL + OpenSearch) ---
+  dotcms-db:
+    image: postgres:15
+    container_name: dotcms_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dotcmsdbuser
+      POSTGRES_PASSWORD: ${DOTCMS_DB_PASSWORD:-password}
+      POSTGRES_DB: dotcms
+    volumes:
+      - dotcms_db_data:/var/lib/postgresql/data
+    networks:
+      - wp-network
+
+  dotcms-opensearch:
+    image: opensearchproject/opensearch:1.3.13
+    container_name: dotcms_opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms4g -Xmx4g # Важно: ограничение памяти
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - dotcms_opensearch_data:/usr/share/opensearch/data
+    networks:
+      - wp-network
+
+  dotcms:
+    image: dotcms/dotcms:latest
+    container_name: dotcms_core
+    restart: unless-stopped
+    depends_on:
+      - dotcms-db
+      - dotcms-opensearch
+    # В Dokploy добавьте домен (например dot.plantup.ru) с портом 8080
+    environment:
+      - "JAVA_OPTS=-Xmx2g -Xms1g -Djava.awt.headless=true"
+      - DOT_ES_DISTRIBUTION=OPENSEARCH
+      - DOT_ES_VERSION=1
+      # Подключение к БД
+      - DB_BASE_URL=jdbc:postgresql://dotcms-db:5432/dotcms
+      - DB_USERNAME=dotcmsdbuser
+      - DB_PASSWORD=${DOTCMS_DB_PASSWORD:-password}
+      # Подключение к OpenSearch (HTTP)
+      - DOT_ES_ENDPOINTS=http://dotcms-opensearch:9200
+      - DOT_ES_PROTOCOL=http
+      - DOT_ES_PORT=9200
+      - DOT_ES_AUTH_TYPE=basic
+      - DOT_ES_INDEX_REPLICAS=0
+      - DOT_ES_INDEX_SHARDS=1
+      - CMS_HEAP_SIZE=1g
+    volumes:
+      - dotcms_assets:/data/shared/assets
+    networks:
+      - wp-network
+
+  # --- 4. Frontend (Astro) ---
+  frontend:
+    build: ./astro
+    container_name: astro_app
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+      - dotcms
+    # В Dokploy добавьте домен (plantup.ru) с портом 4321
+    environment:
+      - PUBLIC_WP_API_URL=${PUBLIC_WP_API_URL}
+      - INTERNAL_WP_API_URL=${INTERNAL_WP_API_URL}
+      - PUBLIC_DOTCMS_HOST=https://dot.plantup.ru
+      - PUBLIC_DOTCMS_AUTH_TOKEN=${DOTCMS_AUTH_TOKEN}
+      - HOST=0.0.0.0
+    networks:
+      - wp-network
+
+# --- Volumes & Networks ---
+volumes:
+  db_data:
+  wp_data:
+  dotcms_db_data:
+  dotcms_opensearch_data:
+  dotcms_assets:
+
+networks:
+  wp-network:
+    driver: bridge
