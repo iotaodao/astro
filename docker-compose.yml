@@ -127,7 +127,7 @@ services:
 
   # --- 4. Frontend (Astro) ---
   frontend:
-    build: ./astro
+    build: .
     container_name: astro_app
     restart: unless-stopped
     depends_on:
